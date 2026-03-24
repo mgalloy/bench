@@ -1,0 +1,93 @@
+[build-system]
+requires = ["setuptools"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "bench"
+version = "0.0.1"
+description = "Utilities for handling tabular data"
+authors = [
+  { name = "Michael Galloy" },
+  { name = "Michael Galloy", email = "mgalloy@gmail.com" },
+]
+maintainers = [
+  { name = "Michael Galloy" },
+  { name = "Michael Galloy", email = "mgalloy@gmail.com" },
+]
+license = "MIT"
+#license = {text = "MIT"}
+license-files = ["LICENSE"]
+readme = "README.md"
+requires-python = ">=3.9"
+# see classifiers at https://pypi.org/classifiers/
+classifiers = [
+  "Development Status :: 5 - Production/Stable",
+  "Intended Audience :: Developers",
+  "Intended Audience :: Science/Research",
+  "Natural Language :: English",
+  "Programming Language :: Python",
+]
+keywords = ["table", "tabular"]
+dependencies = [
+  "itermplot==0.5",
+  "matplotlib",
+  "numpy",
+  "pandas",
+]
+
+[project.urls]
+homepage = "https://github.com/mgalloy/bench"
+repository = "https://github.com/mgalloy/bench"
+documentation = "https://bench.readthedocs.io/en/latest/"
+issues = "https://github.com/mgalloy/bench/issues"
+changelog = "https://github.com/mgalloy/bench/blob/master/CHANGELOG.md"
+
+[project.optional-dependencies]
+dev = [
+  "build",
+  "pytest",
+  "pytest-cov",
+  "pre-commit",
+  "tox",
+  "wheel",
+  "watchdog",
+  "Sphinx",
+  "twine",
+  "coverage",
+  "flake8",
+  "pytest-runner",
+  "black",
+  "sphinx_rtd_theme",
+  "myst-parser",
+]
+
+[project.scripts]
+table = "bench:cli.main"
+
+[tool.black]
+line-length = 88
+target-version = ['py39']
+include = '\.pyi?$'
+exclude = '''
+
+(
+  /(
+      \.eggs         # exclude a few common directories in the
+    | \.git          # root of the project
+    | \.hg
+    | \.mypy_cache
+    | \.tox
+    | \.venv
+    | _build
+    | buck-out
+    | build
+    | dist
+  )/
+  | foo.py           # also separately exclude a file named foo.py in
+                     # the root of the project
+)
+'''
+
+[tool.pytest.ini_options]
+# increment the --cov-fail-under as we increase test coverage
+addopts = "--cov-report html:coverage_html --cov-report term-missing --cov-fail-under 80"
