@@ -30,6 +30,7 @@ classifiers = [
 keywords = ["table", "tabular"]
 dependencies = [
   "itermplot==0.5",
+  "mpl_ascii",
   "matplotlib",
   "numpy",
   "pandas",
