@@ -21,7 +21,6 @@ try:
     import matplotlib
     import matplotlib.pyplot as plt
 
-    matplotlib.use("module://itermplot")
     PLOT_REQUIREMENTS = True
 except:
     PLOT_REQUIREMENTS = False
@@ -44,7 +43,7 @@ def find_dates(line: str):
             date_columns.append(i)
         except ValueError:
             pass
-    return(date_columns)
+    return date_columns
 
 
 def read_data(args):
@@ -58,12 +57,21 @@ def read_data(args):
         args.PARAMS.extend(sys.stdin.read().splitlines())
         date_indices = find_dates(args.PARAMS[0])
         data = "\n".join(args.PARAMS)
-        df = pd.read_table(StringIO(data), sep=r"\s+", header=None, parse_dates=date_indices)
+        df = pd.read_table(
+            StringIO(data), sep=r"\s+", header=None, parse_dates=date_indices
+        )
 
     return df
 
 
-def plot_data(x=None, y=None, xtitle="x-axis", ytitle="y-axis", colors=DARK_BKG_COLORS):
+def plot_data(
+    x=None,
+    y=None,
+    xtitle="x-axis",
+    ytitle="y-axis",
+    title="Plot title",
+    colors=DARK_BKG_COLORS,
+):
     """Plot data."""
     if x is None:
         x = np.arange(0, 10, 0.1)
@@ -79,7 +87,7 @@ def plot_data(x=None, y=None, xtitle="x-axis", ytitle="y-axis", colors=DARK_BKG_
     ax.scatter(x, y, color="r", s=2.0, marker="o")
     ax.set_xlabel(xtitle, color=colors["title_color"])
     ax.set_ylabel(ytitle, color=colors["title_color"])
-    ax.set_title(f"{xtitle} vs {ytitle}", color=colors["title_color"])
+    ax.set_title(title, color=colors["title_color"])
     ax.tick_params(axis="x", colors=colors["axis_color"])
     ax.tick_params(axis="y", colors=colors["axis_color"])
 
@@ -88,6 +96,12 @@ def plot_data(x=None, y=None, xtitle="x-axis", ytitle="y-axis", colors=DARK_BKG_
 
 def plot(args):
     df = read_data(args)
+
+    if args.ascii:
+        matplotlib.use("module://mpl_ascii")
+    else:
+        matplotlib.use("module://itermplot")
+
 
     if args.y is None:
         pass  # TODO: should fail here
@@ -99,7 +113,7 @@ def plot(args):
             xindex = int(args.x)
 
     y = df.iloc[:, yindex].to_numpy()
-    ytitle = f"column {yindex}"
+    ytitle = f"column {yindex}" if args.ytitle is None else args.ytitle
 
     if xindex is None:
         x = np.arange(0, len(y))
@@ -108,10 +122,14 @@ def plot(args):
         x = df.iloc[:, xindex].to_numpy()
         xtitle = f"column {xindex}"
 
+    xtitle = xtitle if args.xtitle is None else args.xtitle
+
+    title = f"{xtitle} vs {ytitle}" if args.title is None else args.title
+
     # print(repr(args))
     # colors = DARK_BKG_COLORS if args.dark_background else LIGHT_BKG_COLORS
     # example_plot(colors=colors)
-    plot_data(x, y, xtitle, ytitle)
+    plot_data(x, y, xtitle, ytitle, title)
 
 
 def print_help(args):
@@ -141,6 +159,9 @@ def main():
         "--dark-background", action="store_true", help="set colors for dark background"
     )
     plot_parser.add_argument(
+        "--ascii", action="store_true", help="use ASCII graphics"
+    )
+    plot_parser.add_argument(
         "-x",
         type=str,
         help="column name/index to use for x-axis variable",
@@ -150,6 +171,24 @@ def main():
         "-y",
         type=str,
         help="column name/index to use for y-axis variable",
+        default=None,
+    )
+    plot_parser.add_argument(
+        "--xtitle",
+        type=str,
+        help="title for x-axis",
+        default=None,
+    )
+    plot_parser.add_argument(
+        "--ytitle",
+        type=str,
+        help="title for y-axis",
+        default=None,
+    )
+    plot_parser.add_argument(
+        "--title",
+        type=str,
+        help="title for plot",
         default=None,
     )
     # TODO: need some common options for many of the parsers:
