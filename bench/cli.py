@@ -36,13 +36,15 @@ DARK_BKG_COLORS = {"axis_color": "white", "title_color": "yellow"}
 def find_dates(line: str):
     tokens = line.split()
     date_columns = []
-    date_format = "%Y-%m-%dT%H:%M:%S.%f"
+    date_formats = ["%Y-%m-%dT%H:%M:%S", "%Y-%m-%dT%H:%M:%S.%f"]
     for i, t in enumerate(tokens):
-        try:
-            datetime.datetime.strptime(t, date_format)
-            date_columns.append(i)
-        except ValueError:
-            pass
+        for fmt in date_formats:
+            try:
+                datetime.datetime.strptime(t, fmt)
+                date_columns.append(i)
+                break
+            except ValueError:
+                pass
     return date_columns
 
 
