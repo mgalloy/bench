@@ -106,7 +106,7 @@ def plot(args):
 
 
     if args.y is None:
-        pass  # TODO: should fail here
+        args.parser.error("no y-axis variable specified")
     else:
         yindex = int(args.y)
         if args.x is None:
