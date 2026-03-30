@@ -54,13 +54,23 @@ def read_data(args):
         filename = args.PARAMS[0]
         with open(filename) as f:
             date_indices = find_dates(f.readline())
-        df = pd.read_table(filename, sep=r"\s+", header=None, parse_dates=date_indices)
+        df = pd.read_table(
+            filename,
+            sep=r"\s+",
+            header=None,
+            parse_dates=date_indices,
+            skiprows=args.skip_rows,
+        )
     else:
         args.PARAMS.extend(sys.stdin.read().splitlines())
         date_indices = find_dates(args.PARAMS[0])
         data = "\n".join(args.PARAMS)
         df = pd.read_table(
-            StringIO(data), sep=r"\s+", header=None, parse_dates=date_indices
+            StringIO(data),
+            sep=r"\s+",
+            header=None,
+            parse_dates=date_indices,
+            skiprows=args.skip_rows,
         )
 
     return df
@@ -103,7 +113,6 @@ def plot(args):
         matplotlib.use("module://mpl_ascii")
     else:
         matplotlib.use("module://itermplot")
-
 
     if args.y is None:
         args.parser.error("no y-axis variable specified")
@@ -160,19 +169,26 @@ def main():
     plot_parser.add_argument(
         "--dark-background", action="store_true", help="set colors for dark background"
     )
+    plot_parser.add_argument("--ascii", action="store_true", help="use ASCII graphics")
     plot_parser.add_argument(
-        "--ascii", action="store_true", help="use ASCII graphics"
+        "--skip-rows",
+        type=int,
+        metavar="N",
+        help="number of rows to skip at the beginning of the input",
+        default=0,
     )
     plot_parser.add_argument(
         "-x",
         type=str,
-        help="column name/index to use for x-axis variable",
+        metavar="INDEX",
+        help="column index to use for x-axis variable",
         default=None,
     )
     plot_parser.add_argument(
         "-y",
         type=str,
-        help="column name/index to use for y-axis variable",
+        metavar="INDEX",
+        help="column index to use for y-axis variable",
         default=None,
     )
     plot_parser.add_argument(
