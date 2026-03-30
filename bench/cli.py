@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+# encoding: utf-8
 
 """ A command-line utility to do basic display and analysis of tabular data.
 """
