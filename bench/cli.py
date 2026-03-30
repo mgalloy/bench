@@ -7,6 +7,7 @@ import argparse
 import datetime
 from io import StringIO
 import os
+import re
 import sys
 
 try:
@@ -33,10 +34,11 @@ LIGHT_BKG_COLORS = {"axis_color": "black", "title_color": "red"}
 DARK_BKG_COLORS = {"axis_color": "white", "title_color": "yellow"}
 
 
-def find_dates(line: str):
-    tokens = line.split()
+def find_dates(line: str, sep=r"\s+"):
+    tokens = re.split(sep, line)
     date_columns = []
-    date_formats = ["%Y-%m-%dT%H:%M:%S", "%Y-%m-%dT%H:%M:%S.%f"]
+    date_formats = ["%Y-%m-%dT%H:%M:%S", "%Y-%m-%dT%H:%M:%S.%f",
+                    "%Y-%m-%d %H:%M:%S", "%Y-%m-%d %H:%M:%S.%f"]
     for i, t in enumerate(tokens):
         for fmt in date_formats:
             try:
@@ -50,9 +52,55 @@ def find_dates(line: str):
 
 def read_data(args):
     """Read data from stdin or from a filename passed as the first argument."""
+    format = args.format.lower()
+    if format == "csv":
+        df = read_csv_data(args)
+    elif format == "tsv":
+        pass
+    elif format == "spaces":
+        df = read_spaces_data(args)
+    return df
+
+
+def read_csv_data(args):
+    """Read CSV data from stdin or from a filename pass as the
+    first argument.
+    """
     if sys.stdin.isatty():
         filename = args.PARAMS[0]
         with open(filename) as f:
+            for i in range(args.skip_rows):
+                f.readline()
+            date_indices = find_dates(f.readline(), sep=r"\s*,\s*")
+        df = pd.read_csv(
+            filename,
+            header=None,
+            parse_dates=date_indices,
+            skiprows=args.skip_rows,
+            low_memory=False,
+        )
+    else:
+        args.PARAMS.extend(sys.stdin.read().splitlines())
+        date_indices = find_dates(args.PARAMS[args.skip_rows], sep=r"\s*,\s*")
+        data = "\n".join(args.PARAMS[args.skip_rows:])
+        df = pd.read_csv(
+            StringIO(data),
+            header=None,
+            parse_dates=date_indices,
+            low_memory=False,
+        )
+    return df
+
+
+def read_spaces_data(args):
+    """Read data delimited by spaces from stdin or from a filename pass as the
+    first argument.
+    """
+    if sys.stdin.isatty():
+        filename = args.PARAMS[0]
+        with open(filename) as f:
+            for i in range(args.skip_rows):
+                f.readline()
             date_indices = find_dates(f.readline())
         df = pd.read_table(
             filename,
@@ -63,14 +111,13 @@ def read_data(args):
         )
     else:
         args.PARAMS.extend(sys.stdin.read().splitlines())
-        date_indices = find_dates(args.PARAMS[0])
-        data = "\n".join(args.PARAMS)
+        date_indices = find_dates(args.PARAMS[args.skip_rows])
+        data = "\n".join(args.PARAMS[args.skip_rows:])
         df = pd.read_table(
             StringIO(data),
             sep=r"\s+",
             header=None,
             parse_dates=date_indices,
-            skiprows=args.skip_rows,
         )
 
     return df
@@ -209,9 +256,13 @@ def main():
         help="title for plot",
         default=None,
     )
-    # TODO: need some common options for many of the parsers:
-    #   --skip_rows N
-    #   --type TYPE where TYPE is "csv", "tsv", "spaces"
+    plot_parser.add_argument(
+        "--format",
+        type=str,
+        metavar="FORMAT",
+        help="format of input data: csv, tsv, or spaces",
+        default="spaces",
+    )
     plot_parser.set_defaults(func=plot, parser=plot_parser)
 
     plot_parser.add_argument("PARAMS", nargs="*")
