@@ -92,6 +92,18 @@ def read_csv_data(args):
     return df
 
 
+def read_spaces_data_file(data: str|StringIO, date_indices: list, skip_rows: int|None=None):
+    df = pd.read_table(
+        data,
+        sep=r"\s+",
+        header=None,
+        parse_dates=date_indices,
+        skiprows=skip_rows,
+    )
+
+    return df
+
+
 def read_spaces_data(args):
     """Read data delimited by spaces from stdin or from a filename pass as the
     first argument.
@@ -102,25 +114,58 @@ def read_spaces_data(args):
             for i in range(args.skip_rows):
                 f.readline()
             date_indices = find_dates(f.readline())
-        df = pd.read_table(
-            filename,
-            sep=r"\s+",
-            header=None,
-            parse_dates=date_indices,
-            skiprows=args.skip_rows,
-        )
+        df = read_spaces_data_file(data, date_indices, args.skip_rows)
     else:
         args.PARAMS.extend(sys.stdin.read().splitlines())
         date_indices = find_dates(args.PARAMS[args.skip_rows])
         data = "\n".join(args.PARAMS[args.skip_rows:])
-        df = pd.read_table(
-            StringIO(data),
-            sep=r"\s+",
-            header=None,
-            parse_dates=date_indices,
-        )
+        df = read_spaces_data_file(StringIO(data), date_indices)
 
     return df
+
+
+def display_table(df, indices:list[int]=None):
+    if indices is None:
+        print(df.to_string())
+    else:
+        print(df.iloc[:, indices].to_string())
+
+
+def join(args):
+    with open(args.left_file) as f:
+        # for i in range(args.skip_rows):
+        #     f.readline()
+        left_date_indices = find_dates(f.readline())
+    with open(args.right_file) as f:
+        # for i in range(args.skip_rows):
+        #     f.readline()
+        right_date_indices = find_dates(f.readline())
+    left_df = read_spaces_data_file(args.left_file, date_indices=left_date_indices)
+    right_df = read_spaces_data_file(args.right_file, date_indices=right_date_indices)
+
+    left_index, right_index = (int(t) for t in args.on.split(":"))
+    if args.left:
+        how = "left"
+    elif args.right:
+        how = "right"
+    elif args.inner:
+        how = "inner"
+    elif args.cross:
+        how = "cross"
+    elif args.left_anti:
+        how = "left_anti"
+    elif args.right_anti:
+        how = "right_anti"
+    else:
+        how = "inner"
+    joined_df = left_df.merge(
+        right_df,
+        left_on=left_df.columns[left_index],
+        right_on=right_df.columns[right_index],
+        # how{‘left’, ‘right’, ‘outer’, ‘inner’, ‘cross’, ‘left_anti’, ‘right_anti'}
+        how=how,
+    )
+    display_table(joined_df)
 
 
 def plot_data(
@@ -210,8 +255,58 @@ def main():
 
     subparsers = parser.add_subparsers(metavar="command")
 
+    # add filter sub-command
+    # add join
+    join_parser = subparsers.add_parser(
+        "join", help="join two tables on a common column",
+    )
+    join_parser.add_argument(
+        "--on",
+        type=str,
+        metavar="INDEX",
+        help="""column indices of columns to join on, separated by a colon,
+e.g., 0:1 to join on column 0 of the left and column 1 on the right""",
+        default="0:0",
+    )
+    # how{‘left’, ‘right’, ‘outer’, ‘inner’, ‘cross’, ‘left_anti’, ‘right_anti'}
+    join_parser.add_argument(
+        "--left", action="store_true", help="set to perform a left join"
+    )
+    join_parser.add_argument(
+        "--right", action="store_true", help="set to perform a right join"
+    )
+    join_parser.add_argument(
+        "--outer", action="store_true", help="set to perform a outer join"
+    )
+    join_parser.add_argument(
+        "--inner", action="store_true", help="set to perform a inner join"
+    )
+    join_parser.add_argument(
+        "--cross", action="store_true", help="set to perform a cross join"
+    )
+    join_parser.add_argument(
+        "--left-anti", action="store_true", help="set to perform a left anti join"
+    )
+    join_parser.add_argument(
+        "--right-anti", action="store_true", help="set to perform a right anti join"
+    )
+    join_parser.add_argument(
+        "left_file",
+        type=str,
+        metavar="LEFT_FILENAME",
+        help="first file to join"
+    )
+    join_parser.add_argument(
+        "right_file",
+        type=str,
+        metavar="RIGHT_FILENAME",
+        help="second file to join"
+    )
+    join_parser.set_defaults(func=join, parser=join_parser)
+
+    # add plot sub-command
     plot_parser = subparsers.add_parser(
-        "plot", help="plot two columns against each other"
+        "plot", help="plot two columns against each other",
     )
     plot_parser.add_argument(
         "--dark-background", action="store_true", help="set colors for dark background"
@@ -263,9 +358,12 @@ def main():
         help="format of input data: csv, tsv, or spaces",
         default="spaces",
     )
+    plot_parser.add_argument(
+        "PARAMS",
+        nargs="*",
+        help="stdin or filename containing table data",
+    )
     plot_parser.set_defaults(func=plot, parser=plot_parser)
-
-    plot_parser.add_argument("PARAMS", nargs="*")
 
     args = parser.parse_args()
 
