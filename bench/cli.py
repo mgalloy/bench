@@ -40,8 +40,12 @@ def date_formatter(dt):
 def find_dates(line: str, sep=r"\s+"):
     tokens = re.split(sep, line)
     date_columns = []
-    date_formats = ["%Y-%m-%dT%H:%M:%S", "%Y-%m-%dT%H:%M:%S.%f",
-                    "%Y-%m-%d %H:%M:%S", "%Y-%m-%d %H:%M:%S.%f"]
+    date_formats = [
+        "%Y-%m-%dT%H:%M:%S",
+        "%Y-%m-%dT%H:%M:%S.%f",
+        "%Y-%m-%d %H:%M:%S",
+        "%Y-%m-%d %H:%M:%S.%f",
+    ]
     for i, t in enumerate(tokens):
         for fmt in date_formats:
             try:
@@ -85,7 +89,7 @@ def read_csv_data(args):
     else:
         args.PARAMS.extend(sys.stdin.read().splitlines())
         date_indices = find_dates(args.PARAMS[args.skip_rows], sep=r"\s*,\s*")
-        data = "\n".join(args.PARAMS[args.skip_rows:])
+        data = "\n".join(args.PARAMS[args.skip_rows :])
         df = pd.read_csv(
             StringIO(data),
             header=None,
@@ -95,7 +99,9 @@ def read_csv_data(args):
     return df, date_indices
 
 
-def read_spaces_data_file(data: str|StringIO, date_indices: list, skip_rows: int|None=None):
+def read_spaces_data_file(
+    data: str | StringIO, date_indices: list, skip_rows: int | None = None
+):
     df = pd.read_table(
         data,
         sep=r"\s+",
@@ -113,22 +119,33 @@ def read_spaces_data(args):
     """
     if sys.stdin.isatty():
         filename = args.PARAMS[0]
-        with open(filename) as f:
-            for i in range(args.skip_rows):
-                f.readline()
-            date_indices = find_dates(f.readline())
+        try:
+            with open(filename) as f:
+                for i in range(args.skip_rows):
+                    f.readline()
+                date_indices = find_dates(f.readline())
+        except FileNotFoundError:
+            args.parser.error(f"file not found: {filename}")
         df = read_spaces_data_file(filename, date_indices, args.skip_rows)
     else:
         args.PARAMS.extend(sys.stdin.read().splitlines())
         date_indices = find_dates(args.PARAMS[args.skip_rows])
-        data = "\n".join(args.PARAMS[args.skip_rows:])
+        data = "\n".join(args.PARAMS[args.skip_rows :])
         df = read_spaces_data_file(StringIO(data), date_indices)
 
     return df, date_indices
 
 
-def display_table(df, column_indices:list[int]=None, date_indices:list[int]=None):
-    formatters = list(date_formatter if i in date_indices else None for i in range(df.shape[1]))
+def display_table(
+    df,
+    column_indices: list[int] = None,
+    row_indices: list[int] = None,
+    date_indices: list[int] = None,
+):
+    formatters = list(
+        date_formatter if i in date_indices else None for i in range(df.shape[1])
+    )
+
     if column_indices is None:
         indexed_df = df
         indexed_formatters = formatters
@@ -366,22 +383,17 @@ e.g., 0:1 to join on column 0 of the left and column 1 on the right""",
         "--right-anti", action="store_true", help="set to perform a right anti join"
     )
     join_parser.add_argument(
-        "left_file",
-        type=str,
-        metavar="LEFT_FILENAME",
-        help="first file to join"
+        "left_file", type=str, metavar="LEFT_FILENAME", help="first file to join"
     )
     join_parser.add_argument(
-        "right_file",
-        type=str,
-        metavar="RIGHT_FILENAME",
-        help="second file to join"
+        "right_file", type=str, metavar="RIGHT_FILENAME", help="second file to join"
     )
     join_parser.set_defaults(func=join, parser=join_parser)
 
     # add plot sub-command
     plot_parser = subparsers.add_parser(
-        "plot", help="plot two columns against each other",
+        "plot",
+        help="plot two columns against each other",
     )
     plot_parser.add_argument(
         "--dark-background", action="store_true", help="set colors for dark background"
