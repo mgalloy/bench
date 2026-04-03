@@ -6,8 +6,8 @@
 import argparse
 import datetime
 from io import StringIO
-import os
 import re
+import shutil
 import sys
 
 try:
@@ -28,10 +28,13 @@ except:
 
 from . import __version__
 
-
-N_COLUMNS = os.get_terminal_size().columns
+N_COLUMNS, N_ROWS = shutil.get_terminal_size(fallback=(100, 40))
 LIGHT_BKG_COLORS = {"axis_color": "black", "title_color": "red"}
 DARK_BKG_COLORS = {"axis_color": "white", "title_color": "yellow"}
+
+
+def date_formatter(dt):
+    return dt.strftime("%Y-%m-%dT%H:%M:%S") if type(dt) == pd.Timestamp else dt
 
 
 def find_dates(line: str, sep=r"\s+"):
@@ -54,12 +57,12 @@ def read_data(args):
     """Read data from stdin or from a filename passed as the first argument."""
     format = args.format.lower()
     if format == "csv":
-        df = read_csv_data(args)
+        df, date_indices = read_csv_data(args)
     elif format == "tsv":
         pass
     elif format == "spaces":
-        df = read_spaces_data(args)
-    return df
+        df, date_indices = read_spaces_data(args)
+    return df, date_indices
 
 
 def read_csv_data(args):
@@ -89,7 +92,7 @@ def read_csv_data(args):
             parse_dates=date_indices,
             low_memory=False,
         )
-    return df
+    return df, date_indices
 
 
 def read_spaces_data_file(data: str|StringIO, date_indices: list, skip_rows: int|None=None):
@@ -114,21 +117,48 @@ def read_spaces_data(args):
             for i in range(args.skip_rows):
                 f.readline()
             date_indices = find_dates(f.readline())
-        df = read_spaces_data_file(data, date_indices, args.skip_rows)
+        df = read_spaces_data_file(filename, date_indices, args.skip_rows)
     else:
         args.PARAMS.extend(sys.stdin.read().splitlines())
         date_indices = find_dates(args.PARAMS[args.skip_rows])
         data = "\n".join(args.PARAMS[args.skip_rows:])
         df = read_spaces_data_file(StringIO(data), date_indices)
 
-    return df
+    return df, date_indices
 
 
-def display_table(df, indices:list[int]=None):
-    if indices is None:
-        print(df.to_string())
+def display_table(df, column_indices:list[int]=None, date_indices:list[int]=None):
+    formatters = list(date_formatter if i in date_indices else None for i in range(df.shape[1]))
+    if column_indices is None:
+        indexed_df = df
+        indexed_formatters = formatters
     else:
-        print(df.iloc[:, indices].to_string())
+        indexed_df = df.iloc[:, column_indices]
+        indexed_formatters = [formatters[i] for i in column_indices]
+
+    print(indexed_df.to_string(header=False, index=False, formatters=indexed_formatters))
+
+
+def parse_column_indices(df, column_expr):
+    column_indices = []
+    tokens = column_expr.split(",")
+    for t in tokens:
+        if t.count(":") == 0:
+            column_indices.append(int(t))
+        elif t.count(":") == 1:
+            start, end = (int(sub_t) for sub_t in t.split(":"))
+            column_indices.extend(list(range(start, end)))
+        else:
+            pass   # error
+    return column_indices
+
+
+def filter(args):
+    df, date_indices = read_data(args)
+    column_indices = args.columns
+    if column_indices is not None:
+        column_indices = parse_column_indices(df, column_indices)
+    display_table(df, column_indices=column_indices, date_indices=date_indices)
 
 
 def join(args):
@@ -165,7 +195,13 @@ def join(args):
         # how{‘left’, ‘right’, ‘outer’, ‘inner’, ‘cross’, ‘left_anti’, ‘right_anti'}
         how=how,
     )
-    display_table(joined_df)
+    joined_df = joined_df.iloc[:, 1:]
+    date_indices = []
+    for di in left_date_indices:
+        date_indices.append(di)
+    for di in right_date_indices:
+        date_indices.append(di + left_df.shape[1])
+    display_table(joined_df, date_indices=date_indices)
 
 
 def plot_data(
@@ -199,7 +235,7 @@ def plot_data(
 
 
 def plot(args):
-    df = read_data(args)
+    df, date_indices = read_data(args)
 
     if args.ascii:
         matplotlib.use("module://mpl_ascii")
@@ -256,9 +292,42 @@ def main():
     subparsers = parser.add_subparsers(metavar="command")
 
     # add filter sub-command
+    filter_parser = subparsers.add_parser(
+        "filter",
+        help="filter rows/columns of table",
+    )
+    filter_parser.add_argument(
+        "--columns",
+        type=str,
+        metavar="COLUMNS_EXPRESSION",
+        help="columns to display",
+        default=None,
+    )
+    filter_parser.add_argument(
+        "--skip-rows",
+        type=int,
+        metavar="N",
+        help="number of rows to skip at the beginning of the input",
+        default=0,
+    )
+    filter_parser.add_argument(
+        "--format",
+        type=str,
+        metavar="FORMAT",
+        help="format of input data: csv, tsv, or spaces",
+        default="spaces",
+    )
+    filter_parser.add_argument(
+        "PARAMS",
+        nargs="*",
+        help="stdin or filename containing table data",
+    )
+    filter_parser.set_defaults(func=filter, parser=filter_parser)
+
     # add join
     join_parser = subparsers.add_parser(
-        "join", help="join two tables on a common column",
+        "join",
+        help="join two tables on a common column",
     )
     join_parser.add_argument(
         "--on",
@@ -320,6 +389,13 @@ e.g., 0:1 to join on column 0 of the left and column 1 on the right""",
         default=0,
     )
     plot_parser.add_argument(
+        "--format",
+        type=str,
+        metavar="FORMAT",
+        help="format of input data: csv, tsv, or spaces",
+        default="spaces",
+    )
+    plot_parser.add_argument(
         "-x",
         type=str,
         metavar="INDEX",
@@ -350,13 +426,6 @@ e.g., 0:1 to join on column 0 of the left and column 1 on the right""",
         type=str,
         help="title for plot",
         default=None,
-    )
-    plot_parser.add_argument(
-        "--format",
-        type=str,
-        metavar="FORMAT",
-        help="format of input data: csv, tsv, or spaces",
-        default="spaces",
     )
     plot_parser.add_argument(
         "PARAMS",
