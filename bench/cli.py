@@ -136,7 +136,10 @@ def display_table(df, column_indices:list[int]=None, date_indices:list[int]=None
         indexed_df = df.iloc[:, column_indices]
         indexed_formatters = [formatters[i] for i in column_indices]
 
-    print(indexed_df.to_string(header=False, index=False, formatters=indexed_formatters))
+    try:
+        print(indexed_df.to_string(header=False, index=False, formatters=indexed_formatters))
+    except BrokenPipeError:
+        pass
 
 
 def parse_column_indices(df, column_expr):
@@ -195,12 +198,15 @@ def join(args):
         # how{‘left’, ‘right’, ‘outer’, ‘inner’, ‘cross’, ‘left_anti’, ‘right_anti'}
         how=how,
     )
-    joined_df = joined_df.iloc[:, 1:]
+
     date_indices = []
     for di in left_date_indices:
         date_indices.append(di)
     for di in right_date_indices:
-        date_indices.append(di + left_df.shape[1])
+        if di == right_index:
+            continue
+        date_indices.append(di + left_df.shape[1] - (1 if di > right_index else 0))
+
     display_table(joined_df, date_indices=date_indices)
 
 
