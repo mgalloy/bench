@@ -75,10 +75,13 @@ def read_csv_data(args):
     """
     if sys.stdin.isatty():
         filename = args.PARAMS[0]
-        with open(filename) as f:
-            for i in range(args.skip_rows):
-                f.readline()
-            date_indices = find_dates(f.readline(), sep=r"\s*,\s*")
+        try:
+            with open(filename) as f:
+                for i in range(args.skip_rows):
+                    f.readline()
+                date_indices = find_dates(f.readline(), sep=r"\s*,\s*")
+        except FileNotFoundError:
+            args.parser.error(f"file not found: {filename}")
         df = pd.read_csv(
             filename,
             header=None,
@@ -153,43 +156,74 @@ def display_table(
         indexed_df = df.iloc[:, column_indices]
         indexed_formatters = [formatters[i] for i in column_indices]
 
+    if row_indices is not None:
+        indexed_df = indexed_df.iloc[row_indices, :]
+
     try:
-        print(indexed_df.to_string(header=False, index=False, formatters=indexed_formatters))
-    except BrokenPipeError:
+        print(
+            indexed_df.to_string(
+                header=False, index=False, formatters=indexed_formatters
+            )
+        )
+    except (BrokenPipeError, KeyboardInterrupt):
         pass
 
 
-def parse_column_indices(df, column_expr):
-    column_indices = []
-    tokens = column_expr.split(",")
+def parse_indices(dim_size: int, expr: str):
+    indices = []
+    tokens = expr.split(",")
     for t in tokens:
         if t.count(":") == 0:
-            column_indices.append(int(t))
+            indices.append(int(t))
         elif t.count(":") == 1:
-            start, end = (int(sub_t) for sub_t in t.split(":"))
-            column_indices.extend(list(range(start, end)))
+            start, end = (sub_t for sub_t in t.split(":"))
+            start = int(start)
+            end = int(end) if end != "" else dim_size
+            indices.extend(list(range(start, end)))
         else:
-            pass   # error
-    return column_indices
+            pass  # error
+    return indices
 
 
 def filter(args):
     df, date_indices = read_data(args)
-    column_indices = args.columns
-    if column_indices is not None:
-        column_indices = parse_column_indices(df, column_indices)
-    display_table(df, column_indices=column_indices, date_indices=date_indices)
+
+    columns_expr = args.columns
+    if columns_expr is not None:
+        column_indices = parse_indices(df.shape[1], columns_expr)
+    else:
+        column_indices = None
+
+    row_expr = args.rows
+    if row_expr is not None:
+        row_indices = parse_indices(df.shape[0], row_expr)
+    else:
+        row_indices = None
+
+    display_table(
+        df,
+        column_indices=column_indices,
+        row_indices=row_indices,
+        date_indices=date_indices,
+    )
 
 
 def join(args):
-    with open(args.left_file) as f:
-        # for i in range(args.skip_rows):
-        #     f.readline()
-        left_date_indices = find_dates(f.readline())
-    with open(args.right_file) as f:
-        # for i in range(args.skip_rows):
-        #     f.readline()
-        right_date_indices = find_dates(f.readline())
+    try:
+        with open(args.left_file) as f:
+            # for i in range(args.skip_rows):
+            #     f.readline()
+            left_date_indices = find_dates(f.readline())
+    except FileNotFoundError:
+        args.parser.error(f"file not found {args.left_file}")
+    try:
+        with open(args.right_file) as f:
+            # for i in range(args.skip_rows):
+            #     f.readline()
+            right_date_indices = find_dates(f.readline())
+    except FileNotFoundError:
+        args.parser.error(f"file not found {args.right_file}")
+
     left_df = read_spaces_data_file(args.left_file, date_indices=left_date_indices)
     right_df = read_spaces_data_file(args.right_file, date_indices=right_date_indices)
 
@@ -324,6 +358,13 @@ def main():
         type=str,
         metavar="COLUMNS_EXPRESSION",
         help="columns to display",
+        default=None,
+    )
+    filter_parser.add_argument(
+        "--rows",
+        type=str,
+        metavar="ROWS_EXPRESSION",
+        help="rows to display (indexing does not include skipped rows)",
         default=None,
     )
     filter_parser.add_argument(
