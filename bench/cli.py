@@ -265,32 +265,49 @@ def join(args):
 
 
 def plot_data(
-    x=None,
-    y=None,
+    x,
+    y,
+    *,
     xtitle="x-axis",
     ytitle="y-axis",
     title="Plot title",
+    xmin=None,
+    xmax=None,
+    ymin=None,
+    ymax=None,
     colors=DARK_BKG_COLORS,
 ):
     """Plot data."""
-    if x is None:
-        x = np.arange(0, 10, 0.1)
-    if y is None:
-        y = np.sin(np.sinc(x))
+
+    timeseries = type(x.dtype) is np.dtypes.DateTime64DType
 
     # [TODO]: need to convert this with a more accurate method, also depends on
     # whether using ASCII or iTerm graphics; also maybe on time series vs 2
     # non-time variables
-    plt.figure(figsize=(N_COLUMNS / 10, 4))
+    if timeseries:
+        width = N_COLUMNS / 8
+        figsize = (width, 3.75)
+    else:
+        width = N_COLUMNS / 15
+        figsize = (width, width)
+
+    plt.figure(figsize=figsize)
 
     ax = plt.subplot(111)
     ax.spines[["top", "right", "bottom", "left"]].set_color(colors["axis_color"])
     ax.spines[["top", "right"]].set_visible(False)
 
     ax.scatter(x, y, color="r", s=2.0, marker="o")
+
+    if xmin is not None or xmax is not None:
+        ax.set_xlim(xmin, xmax)
+    if ymin is not None or ymax is not None:
+        ax.set_ylim(ymin, ymax)
+
     ax.set_xlabel(xtitle, color=colors["title_color"])
     ax.set_ylabel(ytitle, color=colors["title_color"])
     ax.set_title(title, color=colors["title_color"])
+
     ax.tick_params(axis="x", colors=colors["axis_color"])
     ax.tick_params(axis="y", colors=colors["axis_color"])
 
@@ -339,7 +356,7 @@ def plot(args):
     else:
         colors = BKG_COLORS[config.get("plot", "background")]
 
-    plot_data(x, y, xtitle, ytitle, title, colors=colors)
+    plot_data(x, y, xtitle=xtitle, ytitle=ytitle, title=title, xmin=args.xmin, xmax=args.xmax, ymin=args.ymin, ymax=args.ymax, colors=colors)
 
 
 def print_help(args):
@@ -509,6 +526,30 @@ e.g., 0:1 to join on column 0 of the left and column 1 on the right""",
         "--title",
         type=str,
         help="title for plot",
+        default=None,
+    )
+    plot_parser.add_argument(
+        "--xmin",
+        type=float,
+        help="minimum value for x-axis range",
+        default=None,
+    )
+    plot_parser.add_argument(
+        "--xmax",
+        type=float,
+        help="maximum value for x-axis range",
+        default=None,
+    )
+    plot_parser.add_argument(
+        "--ymin",
+        type=float,
+        help="minimum value for y-axis range",
+        default=None,
+    )
+    plot_parser.add_argument(
+        "--ymax",
+        type=float,
+        help="maximum value for y-axis range",
         default=None,
     )
     plot_parser.add_argument(
