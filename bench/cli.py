@@ -10,6 +10,8 @@ import re
 import shutil
 import sys
 
+from . import config
+
 try:
     import pandas as pd
 
@@ -31,6 +33,7 @@ from . import __version__
 N_COLUMNS, N_ROWS = shutil.get_terminal_size(fallback=(100, 40))
 LIGHT_BKG_COLORS = {"axis_color": "black", "title_color": "red"}
 DARK_BKG_COLORS = {"axis_color": "white", "title_color": "yellow"}
+BKG_COLORS = {"dark": DARK_BKG_COLORS, "light": LIGHT_BKG_COLORS}
 
 
 def date_formatter(dt):
@@ -275,6 +278,9 @@ def plot_data(
     if y is None:
         y = np.sin(np.sinc(x))
 
+    # [TODO]: need to convert this with a more accurate method, also depends on
+    # whether using ASCII or iTerm graphics; also maybe on time series vs 2
+    # non-time variables
     plt.figure(figsize=(N_COLUMNS / 10, 4))
 
     ax = plt.subplot(111)
@@ -294,7 +300,11 @@ def plot_data(
 def plot(args):
     df, date_indices = read_data(args)
 
-    if args.ascii:
+    use_ascii = args.ascii
+    if use_ascii is None:
+        use_ascii = config.get("plot", "ascii")
+
+    if use_ascii:
         matplotlib.use("module://mpl_ascii")
     else:
         matplotlib.use("module://itermplot")
@@ -322,10 +332,14 @@ def plot(args):
 
     title = f"{xtitle} vs {ytitle}" if args.title is None else args.title
 
-    # print(repr(args))
-    # colors = DARK_BKG_COLORS if args.dark_background else LIGHT_BKG_COLORS
-    # example_plot(colors=colors)
-    plot_data(x, y, xtitle, ytitle, title)
+    if args.dark_background:
+        colors = DARK_BKG_COLORS
+    elif args.light_background:
+        colors = LIGHT_BKG_COLORS
+    else:
+        colors = BKG_COLORS[config.get("plot", "background")]
+
+    plot_data(x, y, xtitle, ytitle, title, colors=colors)
 
 
 def print_help(args):
@@ -437,9 +451,12 @@ e.g., 0:1 to join on column 0 of the left and column 1 on the right""",
         help="plot two columns against each other",
     )
     plot_parser.add_argument(
-        "--dark-background", action="store_true", help="set colors for dark background"
+        "--dark-background", action="store_true", help="set colors for dark background", default=None
     )
-    plot_parser.add_argument("--ascii", action="store_true", help="use ASCII graphics")
+    plot_parser.add_argument(
+        "--light-background", action="store_true", help="set colors for light background", default=None
+    )
+    plot_parser.add_argument("--ascii", action="store_true", help="use ASCII graphics", default=None)
     plot_parser.add_argument(
         "--skip-rows",
         type=int,
