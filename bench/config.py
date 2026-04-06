@@ -1,5 +1,9 @@
 # encoding: utf-8
 
+"""Module to handle retrieving values from the configuration file. If no value
+is found in the configuration file, then a default value is returned.
+"""
+
 import configparser
 import os
 import pathlib
@@ -13,14 +17,26 @@ if os.path.exists(configuration_file):
     config.read(configuration_file)
 
 
+getters = {
+    str: config.get,
+    int: config.getint,
+    float: config.getfloat,
+    bool: config.getboolean,
+}
+
 # specification for the various options in the configuration file
-spec = {"plot": {"ascii" : {"reader": config.getboolean, "fallback": True},
-                 "background" : {"reader": config.get, "fallback": "light"}},}
+spec = {
+    "plot": {
+        "ascii": {"getter_type": bool, "fallback": True},
+        "background": {"getter_type": str, "fallback": "light"},
+    },
+}
 
 
 def get(section: str, option: str):
-    """Get configuration value, falling back to a default if necessary.
-    """
+    """Get configuration value, falling back to a default if necessary."""
     spec_option = spec[section][option]
-    value = spec_option["reader"](section, option, fallback=spec_option["reader"])
+    value = getters[spec_option["getter_type"]](
+        section, option, fallback=spec_option["fallback"]
+    )
     return value

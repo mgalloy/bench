@@ -451,12 +451,20 @@ e.g., 0:1 to join on column 0 of the left and column 1 on the right""",
         help="plot two columns against each other",
     )
     plot_parser.add_argument(
-        "--dark-background", action="store_true", help="set colors for dark background", default=None
+        "--dark-background",
+        action="store_true",
+        help="set colors for dark background",
+        default=None,
     )
     plot_parser.add_argument(
-        "--light-background", action="store_true", help="set colors for light background", default=None
+        "--light-background",
+        action="store_true",
+        help="set colors for light background",
+        default=None,
     )
-    plot_parser.add_argument("--ascii", action="store_true", help="use ASCII graphics", default=None)
+    plot_parser.add_argument(
+        "--ascii", action="store_true", help="use ASCII graphics", default=None
+    )
     plot_parser.add_argument(
         "--skip-rows",
         type=int,
