@@ -7,5 +7,5 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
-- Initial table command-line utility with basic display, plot, and join
+- Initial table command-line utility with basic filter, plot, and join
   sub-commands.
