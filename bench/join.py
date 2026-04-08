@@ -21,8 +21,12 @@ def join(args):
     except FileNotFoundError:
         args.parser.error(f"file not found {args.right_file}")
 
-    left_df = readers.read_spaces_data_file(args.left_file, date_indices=left_date_indices)
-    right_df = readers.read_spaces_data_file(args.right_file, date_indices=right_date_indices)
+    left_df = readers.read_spaces_data_file(
+        args.left_file, date_indices=left_date_indices
+    )
+    right_df = readers.read_spaces_data_file(
+        args.right_file, date_indices=right_date_indices
+    )
 
     left_index, right_index = (int(t) for t in args.on.split(":"))
     if args.left:
@@ -101,4 +105,3 @@ e.g., 0:1 to join on column 0 of the left and column 1 on the right""",
         "right_file", type=str, metavar="RIGHT_FILENAME", help="second file to join"
     )
     join_parser.set_defaults(func=join, parser=join_parser)
-

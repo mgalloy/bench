@@ -131,8 +131,7 @@ def plot(args):
 
 
 def add_arguments(subparsers):
-    """Add the "plot" sub-command.
-    """
+    """Add the "plot" sub-command."""
     plot_parser = subparsers.add_parser(
         "plot",
         help="plot two columns against each other",

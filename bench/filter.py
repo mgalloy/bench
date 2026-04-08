@@ -42,6 +42,7 @@ def filter(args):
         date_indices=date_indices,
     )
 
+
 def add_arguments(subparsers):
     # add filter sub-command
     filter_parser = subparsers.add_parser(
@@ -82,4 +83,3 @@ def add_arguments(subparsers):
         help="stdin or filename containing table data",
     )
     filter_parser.set_defaults(func=filter, parser=filter_parser)
-

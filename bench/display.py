@@ -7,8 +7,7 @@ import pandas as pd
 
 
 def date_formatter(dt: pd.Timestamp):
-    """Format an element that might be a `pd.Timestamp`.
-    """
+    """Format an element that might be a `pd.Timestamp`."""
     return dt.strftime("%Y-%m-%dT%H:%M:%S") if type(dt) == pd.Timestamp else dt
 
 
@@ -18,8 +17,7 @@ def display_table(
     row_indices: list[int] = None,
     date_indices: list[int] = None,
 ):
-    """Print a table.
-    """
+    """Print a table."""
     formatters = list(
         date_formatter if i in date_indices else None for i in range(df.shape[1])
     )
