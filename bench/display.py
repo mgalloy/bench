@@ -16,6 +16,7 @@ def display_table(
     column_indices: list[int] = None,
     row_indices: list[int] = None,
     date_indices: list[int] = None,
+    format: str = "columns",
 ):
     """Print a table."""
     formatters = list(
@@ -32,11 +33,17 @@ def display_table(
     if row_indices is not None:
         indexed_df = indexed_df.iloc[row_indices, :]
 
+    if format == "columns":
+        s = indexed_df.to_string(header=False, index=False, formatters=indexed_formatters)
+    elif format == "html":
+        s = indexed_df.to_html(index=False, formatters=indexed_formatters)
+    elif format == "latex":
+        s = indexed_df.to_latex(index=False)#, formatters=indexed_formatters)
+    elif format == "markdown":
+        s = indexed_df.to_markdown(index=False)
+    else:
+        s = indexed_df.to_string(header=False, index=False, formatters=indexed_formatters)
     try:
-        print(
-            indexed_df.to_string(
-                header=False, index=False, formatters=indexed_formatters
-            )
-        )
+        print(s)
     except (BrokenPipeError, KeyboardInterrupt):
         pass
