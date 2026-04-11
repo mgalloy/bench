@@ -21,10 +21,10 @@ def join(args):
     except FileNotFoundError:
         args.parser.error(f"file not found {args.right_file}")
 
-    left_df = readers.read_spaces_data_file(
+    left_df = readers.read_columns_data_file(
         args.left_file, date_indices=left_date_indices
     )
-    right_df = readers.read_spaces_data_file(
+    right_df = readers.read_columns_data_file(
         args.right_file, date_indices=right_date_indices
     )
 
@@ -59,7 +59,7 @@ def join(args):
             continue
         date_indices.append(di + left_df.shape[1] - (1 if di > right_index else 0))
 
-    display.display_table(joined_df, date_indices=date_indices)
+    display.display_table(joined_df, date_indices=date_indices, format=args.out_format)
 
 
 def add_arguments(subparsers):
@@ -67,6 +67,13 @@ def add_arguments(subparsers):
     join_parser = subparsers.add_parser(
         "join",
         help="join two tables on a common column",
+    )
+    join_parser.add_argument(
+        "--out-format",
+        type=str,
+        metavar="FORMAT",
+        help="format of input data: columns, html, latex, or markdown",
+        default="columns",
     )
     join_parser.add_argument(
         "--on",

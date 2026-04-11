@@ -162,11 +162,11 @@ def add_arguments(subparsers):
         default=0,
     )
     plot_parser.add_argument(
-        "--format",
+        "--in-format",
         type=str,
         metavar="FORMAT",
-        help="format of input data: csv, tsv, or spaces",
-        default="spaces",
+        help="format of input data: csv, tsv, or columns",
+        default="columns",
     )
 
     plot_parser.add_argument(

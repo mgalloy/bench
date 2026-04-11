@@ -40,6 +40,7 @@ def filter(args):
         column_indices=column_indices,
         row_indices=row_indices,
         date_indices=date_indices,
+        format=args.out_format,
     )
 
 
@@ -71,11 +72,18 @@ def add_arguments(subparsers):
         default=0,
     )
     filter_parser.add_argument(
-        "--format",
+        "--in-format",
         type=str,
         metavar="FORMAT",
-        help="format of input data: csv, tsv, or spaces",
-        default="spaces",
+        help="format of input data: csv, tsv, or columns",
+        default="columns",
+    )
+    filter_parser.add_argument(
+        "--out-format",
+        type=str,
+        metavar="FORMAT",
+        help="format of input data: columns, html, latex, or markdown",
+        default="columns",
     )
     filter_parser.add_argument(
         "PARAMS",
