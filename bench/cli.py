@@ -38,12 +38,17 @@ def main():
     script_name = "table"
     name = f"{script_name} {__version__}"
 
+    subcommands = [filter, join, plot, config]
+    subcommand_names = "|".join(s.__name__.split(".")[-1] for s in subcommands)
+
     ascii = "ASCII" if config.get("plot", "ascii") else "iTerm"
     description = f"{name} [columns: {N_COLUMNS}, default graphics: {ascii}]"
 
+    epilog = f"Do '{script_name} ({subcommand_names}) --help' to obtain more help about that sub-command"
+
     # [TODO]: suggest_on_error=True below requires Python 3.14, but would be
-    # cool
-    parser = argparse.ArgumentParser(description=description)
+    # a useful addition and maybe worth checking the version for
+    parser = argparse.ArgumentParser(description=description, epilog=epilog)
 
     # top-level arguments
     parser.add_argument("-v", "--version", action="version", version=name)
@@ -54,10 +59,8 @@ def main():
     subparsers = parser.add_subparsers(metavar="command")
 
     # setup sub-commands
-    filter.add_arguments(subparsers)
-    join.add_arguments(subparsers)
-    plot.add_arguments(subparsers)
-    config.add_arguments(subparsers)
+    for s in subcommands:
+        s.add_arguments(subparsers)
 
     args = parser.parse_args()
     args.func(args)
