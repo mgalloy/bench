@@ -22,6 +22,36 @@ DARK_BKG_COLORS = {"axis_color": "white", "title_color": "yellow"}
 BKG_COLORS = {"dark": DARK_BKG_COLORS, "light": LIGHT_BKG_COLORS}
 
 
+def get_figsize(timeseries: True, width: float|None=None, height: float|None=None):
+    """Get size of plot.
+
+    [TODO]: need to convert this with a more accurate method, also depends on
+    whether using ASCII or iTerm graphics
+    """
+    if timeseries:
+        default_width = cli.N_COLUMNS / 15
+        default_height = 3.75
+        if width is not None and height is not None:
+            figsize = (width, height)
+        elif width is not None:
+            figsize = (width, default_height)
+        elif height is not None:
+            figsize = (default_width, height)
+        else:
+            figsize = (default_width, default_height)
+    else:
+        if width is not None and height is not None:
+            figsize = (width, height)
+        elif width is not None:
+            figsize = (width, width)
+        elif height is not None:
+            figsize = (height, height)
+        else:
+            default_width = cli.N_COLUMNS / 15
+            figsize = (default_width, default_width)
+    return figsize
+
+
 def plot_data(
     x,
     y,
@@ -29,29 +59,20 @@ def plot_data(
     xtitle="x-axis",
     ytitle="y-axis",
     title="Plot title",
-    xmin=None,
-    xmax=None,
-    ymin=None,
-    ymax=None,
-    colors=DARK_BKG_COLORS,
+    xmin:float|None=None,
+    xmax:float|None=None,
+    ymin:float|None=None,
+    ymax:float|None=None,
+    width: float|None=None,
+    height: float|None=None,
+    colors:dict=DARK_BKG_COLORS,
 ):
     """Plot data as a scatter plot or a time-series (if `x` is an array of
     datetime).
     """
 
     timeseries = type(x.dtype) is np.dtypes.DateTime64DType
-
-    # [TODO]: need to convert this with a more accurate method, also depends on
-    # whether using ASCII or iTerm graphics; also maybe on time series vs 2
-    # non-time variables
-    if timeseries:
-        width = cli.N_COLUMNS / 8
-        figsize = (width, 3.75)
-    else:
-        width = cli.N_COLUMNS / 15
-        figsize = (width, width)
-
-    plt.figure(figsize=figsize)
+    plt.figure(figsize=get_figsize(timeseries, width, height))
 
     ax = plt.subplot(111)
     ax.spines[["top", "right", "bottom", "left"]].set_color(colors["axis_color"])
@@ -75,6 +96,8 @@ def plot_data(
 
 
 def plot(args):
+    """Plot sub-command handler.
+    """
     df, date_indices = readers.read_data(args)
 
     use_ascii = args.ascii
@@ -126,12 +149,14 @@ def plot(args):
         xmax=args.xmax,
         ymin=args.ymin,
         ymax=args.ymax,
+        width=args.width,
+        height=args.height,
         colors=colors,
     )
 
 
 def add_arguments(subparsers):
-    """Add the "plot" sub-command."""
+    """Add the "plot" sub-command arguments."""
     plot_parser = subparsers.add_parser(
         "plot",
         help="plot two columns against each other",
@@ -223,6 +248,18 @@ def add_arguments(subparsers):
         "--ymax",
         type=float,
         help="maximum value for y-axis range",
+        default=None,
+    )
+    plot_parser.add_argument(
+        "--width",
+        type=float,
+        help="width of plot",
+        default=None,
+    )
+    plot_parser.add_argument(
+        "--height",
+        type=float,
+        help="height of plot",
         default=None,
     )
 
