@@ -53,7 +53,8 @@ def get(section: str, option: str):
 
 
 def display_default_config():
-    print(f"# Default configuration for table {__version__}\n")
+    print(f"# Default configuration for table {__version__}")
+    print(f"# Place in {configuration_file}\n")
 
     output = []
     max_length = max([len(o) for s in spec for o in spec[s]])
