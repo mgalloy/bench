@@ -65,7 +65,8 @@ def join_handler(args):
 
 
 def add_arguments(subparsers):
-    # add join
+    """Add join sub-command arguments.
+    """
     join_parser = subparsers.add_parser(
         "join",
         help="join two tables on a common column",
