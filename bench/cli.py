@@ -13,6 +13,7 @@ from . import dates
 from . import display
 from . import readers
 
+# define sub-commands
 from . import filter
 from . import join
 from . import plot
@@ -37,7 +38,8 @@ def main():
     script_name = "table"
     name = f"{script_name} {__version__}"
 
-    description = f"{name} [columns: {N_COLUMNS}]"
+    ascii = "ASCII" if config.get("plot", "ascii") else "iTerm"
+    description = f"{name} [columns: {N_COLUMNS}, default graphics: {ascii}]"
 
     parser = argparse.ArgumentParser(description=description)
 
@@ -55,11 +57,11 @@ def main():
     plot.add_arguments(subparsers)
 
     args = parser.parse_args()
-    try:
-        args.func(args)
-    except KeyboardInterrupt:
-        print()
+    args.func(args)
 
 
 if __name__ == "__main__":
-    main()
+    try:
+        main()
+    except KeyboardInterrupt:
+        print()
