@@ -5,7 +5,9 @@ from . import display
 from . import readers
 
 
-def join(args):
+def join_handler(args):
+    """Handle join sub-command actions.
+    """
     try:
         with open(args.left_file) as f:
             # for i in range(args.skip_rows):
@@ -111,4 +113,4 @@ e.g., 0:1 to join on column 0 of the left and column 1 on the right""",
     join_parser.add_argument(
         "right_file", type=str, metavar="RIGHT_FILENAME", help="second file to join"
     )
-    join_parser.set_defaults(func=join, parser=join_parser)
+    join_parser.set_defaults(func=join_handler, parser=join_parser)

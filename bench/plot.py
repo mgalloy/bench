@@ -97,7 +97,7 @@ def plot_data(
     plt.show()
 
 
-def plot(args):
+def plot_handler(args):
     """Plot sub-command handler."""
     df, date_indices = readers.read_data(args)
 
@@ -270,4 +270,4 @@ def add_arguments(subparsers):
         help="stdin or filename containing table data",
     )
 
-    plot_parser.set_defaults(func=plot, parser=plot_parser)
+    plot_parser.set_defaults(func=plot_handler, parser=plot_parser)

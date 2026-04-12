@@ -20,7 +20,7 @@ def parse_indices(dim_size: int, expr: str):
     return indices
 
 
-def filter(args):
+def filter_handler(args):
     df, date_indices = readers.read_data(args)
 
     columns_expr = args.columns
@@ -90,4 +90,4 @@ def add_arguments(subparsers):
         nargs="*",
         help="stdin or filename containing table data",
     )
-    filter_parser.set_defaults(func=filter, parser=filter_parser)
+    filter_parser.set_defaults(func=filter_handler, parser=filter_parser)

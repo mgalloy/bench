@@ -40,18 +40,6 @@ spec = {
             "help": "default background colorlight or dark",
         },
     },
-    "plot2": {
-        "ascii": {
-            "getter_type": bool,
-            "fallback": True,
-            "help": "set to use ASCII graphics",
-        },
-        "background": {
-            "getter_type": str,
-            "fallback": "light",
-            "help": "default background colorlight or dark",
-        },
-    },
 }
 
 
@@ -68,9 +56,9 @@ def display_default_config():
     print(f"# Default configuration for table {__version__}\n")
 
     output = []
+    max_length = max([len(o) for s in spec for o in spec[s]])
     for section_name in spec:
         output.append(f"[{section_name}]")
-        max_length = max([len(o) for o in spec[section_name]])
         for option_name, option_specs in spec[section_name].items():
             help = option_specs["help"]
             output.append(f"# {help}")
@@ -81,3 +69,22 @@ def display_default_config():
         output = output[0:-1]
 
     print("\n".join(output))
+
+
+def config_handler(args):
+    """Handle config sub-command actions.
+    """
+    if args.defaults:
+        display_default_config()
+
+
+def add_arguments(subparsers):
+    """Add the "plot" sub-command arguments."""
+    config_parser = subparsers.add_parser(
+        "config",
+        help="handle configuration",
+    )
+    config_parser.add_argument(
+        "--defaults", action="store_true", help="print default configuration", default=None
+    )
+    config_parser.set_defaults(func=config_handler, parser=config_parser)

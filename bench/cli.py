@@ -41,6 +41,8 @@ def main():
     ascii = "ASCII" if config.get("plot", "ascii") else "iTerm"
     description = f"{name} [columns: {N_COLUMNS}, default graphics: {ascii}]"
 
+    # [TODO]: suggest_on_error=True below requires Python 3.14, but would be
+    # cool
     parser = argparse.ArgumentParser(description=description)
 
     # top-level arguments
@@ -55,6 +57,7 @@ def main():
     filter.add_arguments(subparsers)
     join.add_arguments(subparsers)
     plot.add_arguments(subparsers)
+    config.add_arguments(subparsers)
 
     args = parser.parse_args()
     args.func(args)
