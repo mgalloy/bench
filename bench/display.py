@@ -34,15 +34,19 @@ def display_table(
         indexed_df = indexed_df.iloc[row_indices, :]
 
     if format == "columns":
-        s = indexed_df.to_string(header=False, index=False, formatters=indexed_formatters)
+        s = indexed_df.to_string(
+            header=False, index=False, formatters=indexed_formatters
+        )
     elif format == "html":
         s = indexed_df.to_html(index=False, formatters=indexed_formatters)
     elif format == "latex":
-        s = indexed_df.to_latex(index=False)#, formatters=indexed_formatters)
+        s = indexed_df.to_latex(index=False)  # , formatters=indexed_formatters)
     elif format == "markdown":
         s = indexed_df.to_markdown(index=False)
     else:
-        s = indexed_df.to_string(header=False, index=False, formatters=indexed_formatters)
+        s = indexed_df.to_string(
+            header=False, index=False, formatters=indexed_formatters
+        )
     try:
         print(s)
     except (BrokenPipeError, KeyboardInterrupt):

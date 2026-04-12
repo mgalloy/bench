@@ -22,7 +22,9 @@ DARK_BKG_COLORS = {"axis_color": "white", "title_color": "yellow"}
 BKG_COLORS = {"dark": DARK_BKG_COLORS, "light": LIGHT_BKG_COLORS}
 
 
-def get_figsize(timeseries: True, width: float|None=None, height: float|None=None):
+def get_figsize(
+    timeseries: True, width: float | None = None, height: float | None = None
+):
     """Get size of plot.
 
     [TODO]: need to convert this with a more accurate method, also depends on
@@ -59,13 +61,13 @@ def plot_data(
     xtitle="x-axis",
     ytitle="y-axis",
     title="Plot title",
-    xmin:float|None=None,
-    xmax:float|None=None,
-    ymin:float|None=None,
-    ymax:float|None=None,
-    width: float|None=None,
-    height: float|None=None,
-    colors:dict=DARK_BKG_COLORS,
+    xmin: float | None = None,
+    xmax: float | None = None,
+    ymin: float | None = None,
+    ymax: float | None = None,
+    width: float | None = None,
+    height: float | None = None,
+    colors: dict = DARK_BKG_COLORS,
 ):
     """Plot data as a scatter plot or a time-series (if `x` is an array of
     datetime).
@@ -96,8 +98,7 @@ def plot_data(
 
 
 def plot(args):
-    """Plot sub-command handler.
-    """
+    """Plot sub-command handler."""
     df, date_indices = readers.read_data(args)
 
     use_ascii = args.ascii
