@@ -6,8 +6,7 @@ from . import readers
 
 
 def join_handler(args):
-    """Handle join sub-command actions.
-    """
+    """Handle join sub-command actions."""
     try:
         with open(args.left_file) as f:
             # for i in range(args.skip_rows):
@@ -65,8 +64,7 @@ def join_handler(args):
 
 
 def add_arguments(subparsers):
-    """Add join sub-command arguments.
-    """
+    """Add join sub-command arguments."""
     join_parser = subparsers.add_parser(
         "join",
         help="join two tables on a common column",
