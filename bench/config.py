@@ -37,7 +37,7 @@ spec = {
         "background": {
             "getter_type": str,
             "fallback": "light",
-            "help": "default background color: \"light\" or \"dark\"",
+            "help": 'default background color: "light" or "dark"',
         },
     },
 }
@@ -73,15 +73,13 @@ def display_default_config():
 
 
 def set_option(section: str, option: str, value):
-    """Set the option to the given value in the configuration file.
-    """
+    """Set the option to the given value in the configuration file."""
     # [TODO]: need to do this still
     print(f"NOT IMPLEMENTED: setting {section}.{option} = {value}")
 
 
 def config_handler(args):
-    """Handle config sub-command actions.
-    """
+    """Handle config sub-command actions."""
     if args.defaults:
         display_default_config()
         return
@@ -90,10 +88,15 @@ def config_handler(args):
         try:
             section, option = args.option.split(".")
         except ValueError as e:
-            args.parser.error(f"invalid option name: \"{args.option}\", name should be in the format \"section.option\"")
+            args.parser.error(
+                f'invalid option name: "{args.option}", name should be in the format "section.option"'
+            )
         if args.value is None:
             value = config.get(section, option)
-            print(f"{section}.{option} = {value}")
+            if args.verbose:
+                print(f"{section}.{option} = {value}")
+            else:
+                print(value)
         else:
             set_option(section, option, args.value)
 
@@ -105,10 +108,24 @@ def add_arguments(subparsers):
         help="handle configuration",
     )
     config_parser.add_argument(
-        "--defaults", action="store_true", help="print default configuration", default=None
+        "--defaults",
+        action="store_true",
+        help="print default configuration",
+        default=None,
     )
     config_parser.add_argument(
-        "option", type=str, nargs="?", metavar="OPTION_NAME", help="option name in the format \"section.option\"", default=None
+        "--verbose",
+        action="store_true",
+        help="print extra information about configuration",
+        default=False,
+    )
+    config_parser.add_argument(
+        "option",
+        type=str,
+        nargs="?",
+        metavar="OPTION_NAME",
+        help='option name in the format "section.option"',
+        default=None,
     )
     config_parser.add_argument(
         "value", type=str, nargs="?", metavar="VALUE", help="option value", default=None
