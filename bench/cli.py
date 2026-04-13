@@ -5,6 +5,7 @@
 
 import argparse
 import shutil
+import sys
 
 from . import __version__
 
@@ -46,9 +47,15 @@ def main():
 
     epilog = f"Do '{script_name} ({subcommand_names}) --help' to obtain more help about that sub-command"
 
-    # [TODO]: suggest_on_error=True below requires Python 3.14, but would be
-    # a useful addition and maybe worth checking the version for
-    parser = argparse.ArgumentParser(description=description, epilog=epilog)
+    if sys.version_info < (
+        3,
+        14,
+    ):
+        parser = argparse.ArgumentParser(description=description, epilog=epilog)
+    else:
+        parser = argparse.ArgumentParser(
+            description=description, epilog=epilog, suggest_on_error=True
+        )
 
     # top-level arguments
     parser.add_argument("-v", "--version", action="version", version=name)
