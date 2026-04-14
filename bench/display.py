@@ -6,9 +6,17 @@
 import pandas as pd
 
 
-def date_formatter(dt: pd.Timestamp):
+def date_formatter(ts: pd.Timestamp):
     """Format an element that might be a `pd.Timestamp`."""
-    return dt.strftime("%Y-%m-%dT%H:%M:%S") if type(dt) == pd.Timestamp else dt
+    if type(ts) == pd.Timestamp:
+        if ts.microsecond == 0:
+            return ts.strftime("%Y-%m-%dT%H:%M:%S")
+        else:
+            millisecond = f"{ts.microsecond:06}"[0:3]
+            return ts.strftime("%Y-%m-%dT%H:%M:%S.{}").format(millisecond)
+    else:
+        return ts
+    # return ts.strftime("%Y-%m-%dT%H:%M:%S.%f") if type(ts) == pd.Timestamp else ts
 
 
 def display_table(
@@ -42,7 +50,15 @@ def display_table(
     elif format == "latex":
         s = indexed_df.to_latex(index=False)  # , formatters=indexed_formatters)
     elif format == "markdown":
-        s = indexed_df.to_markdown(index=False)
+        # floatfmt = list(
+        #     "%Y-%m-%dT%H:%M:%S" if i in date_indices else "" for i in range(df.shape[1])
+        # )
+        # if column_indices is not None:
+        #     floatfmt = [floatfmt[i] for i in column_indices]
+        s = indexed_df.to_markdown(
+            index=False,
+            # floatfmt=floatfmt,
+        )
     else:
         s = indexed_df.to_string(
             header=False, index=False, formatters=indexed_formatters
