@@ -1,6 +1,6 @@
 # encoding: utf-8
 
-"""Library routines to handle displaying a table.
+"""Library routines to handle displaying a table in various formats.
 """
 
 import pandas as pd
@@ -42,6 +42,7 @@ def display_table(
         indexed_df = indexed_df.iloc[row_indices, :]
 
     if format == "columns":
+        # [TODO]: use line_width set to terminal width?
         s = indexed_df.to_string(
             header=False, index=False, formatters=indexed_formatters
         )
@@ -50,6 +51,8 @@ def display_table(
     elif format == "latex":
         s = indexed_df.to_latex(index=False)  # , formatters=indexed_formatters)
     elif format == "markdown":
+        # [TODO]: this does not work well and doesn't respect all the keywords,
+        # it might be better to make my own
         # floatfmt = list(
         #     "%Y-%m-%dT%H:%M:%S" if i in date_indices else "" for i in range(df.shape[1])
         # )
