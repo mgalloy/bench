@@ -41,32 +41,42 @@ def display_table(
     if row_indices is not None:
         indexed_df = indexed_df.iloc[row_indices, :]
 
+    n_columns = len(indexed_df.columns)
     if format == "columns":
         # [TODO]: use line_width set to terminal width?
         s = indexed_df.to_string(
-            header=False, index=False, formatters=indexed_formatters
+            header=False, index=False, formatters=indexed_formatters, line_width=100
         )
     elif format == "html":
         s = indexed_df.to_html(index=False, formatters=indexed_formatters)
     elif format == "latex":
-        s = indexed_df.to_latex(index=False)  # , formatters=indexed_formatters)
+        s = r"\begin{tabular}{" + "".join("l" for n in range(n_columns)) + "}\n"
+        s += r"\toprule" + "\n"
+        s += " & ".join(str(i) for i in range(n_columns)) + " \\\\" + "\n"
+        s += r"\midrule" + "\n"
+        for r in indexed_df.itertuples():
+            d = r" & ".join([str(date_formatter(v)) for i, v in enumerate(r) if i > 0])
+            s += f"{d} \\\\\n"
+        s += r"\bottomrule" + "\n" + r"\end{tabular}" + "\n"
+        # s = indexed_df.to_latex(index=False, formatters=indexed_formatters)
     elif format == "markdown":
-        # [TODO]: this does not work well and doesn't respect all the keywords,
-        # it might be better to make my own
+        s = "| " + " | ".join(str(n) for n in range(n_columns)) + " |\n"
+        s += "| " + " | ".join("---" for i in range(n_columns)) + " |\n"
+        for r in indexed_df.itertuples():
+            d = " | ".join([str(date_formatter(v)) for i, v in enumerate(r) if i > 0])
+            s += f"| {d} |\n"
+
         # floatfmt = list(
         #     "%Y-%m-%dT%H:%M:%S" if i in date_indices else "" for i in range(df.shape[1])
         # )
         # if column_indices is not None:
         #     floatfmt = [floatfmt[i] for i in column_indices]
-        s = indexed_df.to_markdown(
-            index=False,
-            # floatfmt=floatfmt,
-        )
+        # s = indexed_df.to_markdown(index=False, floatfmt=floatfmt)
     else:
         s = indexed_df.to_string(
             header=False, index=False, formatters=indexed_formatters
         )
     try:
-        print(s)
+        print(s, end="" if format in {"latex", "markdown"} else "\n")
     except (BrokenPipeError, KeyboardInterrupt):
         pass
