@@ -6,7 +6,7 @@
 import pandas as pd
 
 
-def date_formatter(ts: pd.Timestamp):
+def formatter(ts: pd.Timestamp):
     """Format an element that might be a `pd.Timestamp`."""
     if type(ts) == pd.Timestamp:
         if ts.microsecond == 0:
@@ -28,7 +28,7 @@ def display_table(
 ):
     """Print a table."""
     formatters = list(
-        date_formatter if i in date_indices else None for i in range(df.shape[1])
+        formatter if i in date_indices else None for i in range(df.shape[1])
     )
 
     if column_indices is None:
