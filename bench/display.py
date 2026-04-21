@@ -55,7 +55,7 @@ def display_table(
         s += " & ".join(str(i) for i in range(n_columns)) + " \\\\" + "\n"
         s += r"\midrule" + "\n"
         for r in indexed_df.itertuples():
-            d = r" & ".join([str(date_formatter(v)) for i, v in enumerate(r) if i > 0])
+            d = r" & ".join([str(formatter(v)) for i, v in enumerate(r) if i > 0])
             s += f"{d} \\\\\n"
         s += r"\bottomrule" + "\n" + r"\end{tabular}" + "\n"
         # s = indexed_df.to_latex(index=False, formatters=indexed_formatters)
@@ -63,7 +63,7 @@ def display_table(
         s = "| " + " | ".join(str(n) for n in range(n_columns)) + " |\n"
         s += "| " + " | ".join("---" for i in range(n_columns)) + " |\n"
         for r in indexed_df.itertuples():
-            d = " | ".join([str(date_formatter(v)) for i, v in enumerate(r) if i > 0])
+            d = " | ".join([str(formatter(v)) for i, v in enumerate(r) if i > 0])
             s += f"| {d} |\n"
 
         # floatfmt = list(
