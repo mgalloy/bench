@@ -65,7 +65,7 @@ def get_connection(config_filename: str, config_section: str, default_section: s
 
 
 def query(
-    connection: mysql.connector.MySQLConnection,
+    connection: mysql.connector.connection.MySQLConnection,
     sql_cmd: str,
 ):
     with closing(connection.cursor()) as cursor:
