@@ -15,6 +15,7 @@ from . import display
 from . import readers
 
 # define sub-commands
+from . import database
 from . import filter
 from . import join
 from . import plot
@@ -30,7 +31,6 @@ except:
 
 N_COLUMNS, N_ROWS = shutil.get_terminal_size(fallback=(100, 40))
 
-
 def print_help(args):
     args.parser.print_help()
 
@@ -39,7 +39,7 @@ def main():
     script_name = "table"
     name = f"{script_name} {__version__}"
 
-    subcommands = [filter, join, plot, config]
+    subcommands = [database, filter, join, plot, config]
     subcommand_names = "|".join(s.__name__.split(".")[-1] for s in subcommands)
 
     ascii = "ASCII" if config.get("plot", "ascii") else "iTerm"
