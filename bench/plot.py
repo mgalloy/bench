@@ -30,8 +30,9 @@ def get_figsize(
     [TODO]: need to convert this with a more accurate method, also depends on
     whether using ASCII or iTerm graphics
     """
+    cols2in = 1.0 / 9.0
     if timeseries:
-        default_width = cli.N_COLUMNS / 15
+        default_width = cli.N_COLUMNS * cols2in
         default_height = 3.75
         if width is not None and height is not None:
             figsize = (width, height)
@@ -49,7 +50,7 @@ def get_figsize(
         elif height is not None:
             figsize = (height, height)
         else:
-            default_width = cli.N_COLUMNS / 15
+            default_width = 0.8 * cli.N_COLUMNS * cols2in
             figsize = (default_width, default_width)
     return figsize
 
