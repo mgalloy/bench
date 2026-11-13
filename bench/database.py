@@ -10,6 +10,9 @@ import os
 
 import mysql
 import mysql.connector
+import pandas as pd
+
+from . import display
 
 
 class DatabaseError(Exception):
@@ -96,9 +99,16 @@ def database_handler(args):
             args.parser.error(e)
         except mysql.connector.errors.DatabaseError as e:
             args.parser.error(e)
-    # print("  ".join(column_names))
-    for r in results:
-        print("  ".join([type2str(i) for i in r]))
+
+    df = pd.DataFrame(results, columns=column_names)
+
+    date_indices = [i for i, r in enumerate(results[0]) if isinstance(r, datetime.datetime) or isinstance(r, datetime.date)]
+
+    display.display_table(
+        df,
+        date_indices=date_indices,
+        format=args.out_format,
+    )
 
 
 def add_arguments(subparsers):
@@ -107,6 +117,13 @@ def add_arguments(subparsers):
         "database",
         aliases=["db"],
         help="query a database",
+    )
+    database_parser.add_argument(
+        "--out-format",
+        type=str,
+        metavar="FORMAT",
+        help="format of input data: columns, html, latex, or markdown",
+        default="columns",
     )
     database_parser.add_argument(
         "query",
