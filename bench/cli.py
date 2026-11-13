@@ -31,6 +31,7 @@ except:
 
 N_COLUMNS, N_ROWS = shutil.get_terminal_size(fallback=(100, 40))
 
+
 def print_help(args):
     args.parser.print_help()
 
