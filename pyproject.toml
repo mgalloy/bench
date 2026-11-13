@@ -45,10 +45,10 @@ issues = "https://github.com/mgalloy/bench/issues"
 changelog = "https://github.com/mgalloy/bench/blob/master/CHANGELOG.md"
 
 [project.optional-dependencies]
+test = ["pytest", "pytest-cov"]
 dev = [
+  "bench[test]",
   "build",
-  "pytest",
-  "pytest-cov",
   "pre-commit",
   "tox",
   "wheel",
@@ -93,3 +93,17 @@ exclude = '''
 [tool.pytest.ini_options]
 # increment the --cov-fail-under as we increase test coverage
 addopts = "--cov-report html:coverage_html --cov-report term-missing --cov-fail-under 80"
+
+[tool.tox]
+requires = ["tox>=4.19"]
+env_list = ["3.14", "3.13", "3.12", "type"]
+
+[tool.tox.env_run_base]
+description = "Run test under {base_python}"
+extras = ["test"]
+commands = [["pytest", "--local", "tests"]]
+
+[tool.tox.env.type]
+description = "run type check on code base"
+deps = ["mypy==1.18.2", "types-cachetools>=5.5.0.20240820", "types-chardet>=5.0.4.6"]
+commands = [["mypy", "src{/}mlso"], ["mypy", "--local", "tests"]]
