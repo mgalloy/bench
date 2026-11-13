@@ -25,6 +25,7 @@ def display_table(
     row_indices: list[int] = None,
     date_indices: list[int] = None,
     format: str = "columns",
+    line_width: int = 100,
 ):
     """Print a table."""
     formatters = list(
@@ -43,10 +44,11 @@ def display_table(
 
     n_columns = len(indexed_df.columns)
     if format == "columns":
-        # [TODO]: use line_width set to terminal width?
         s = indexed_df.to_string(
-            header=False, index=False, formatters=indexed_formatters, line_width=100
+            header=False, index=False, formatters=indexed_formatters, line_width=line_width
         )
+    elif format == "csv":
+        s = indexed_df.to_csv()
     elif format == "html":
         s = indexed_df.to_html(index=False, formatters=indexed_formatters)
     elif format == "latex":
@@ -60,7 +62,7 @@ def display_table(
         s += r"\bottomrule" + "\n" + r"\end{tabular}" + "\n"
         # s = indexed_df.to_latex(index=False, formatters=indexed_formatters)
     elif format == "markdown":
-        s = "| " + " | ".join(str(n) for n in range(n_columns)) + " |\n"
+        s = "| " + " | ".join(str(c) for c in indexed_df.columns) + " |\n"
         s += "| " + " | ".join("---" for i in range(n_columns)) + " |\n"
         for r in indexed_df.itertuples():
             d = " | ".join([str(formatter(v)) for i, v in enumerate(r) if i > 0])
